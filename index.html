@@ -27,10 +27,10 @@
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.6 var(--font-body);-webkit-font-smoothing:antialiased}
-h1,h2,h3,h4{font-family:var(--font-body);margin:0;line-height:1.15;letter-spacing:-.01em}
+h1,h2,h3,h4{font-family:var(--font-body);margin:0;line-height:1.15;letter-spacing:-.01em;overflow-wrap:break-word}
 h1{font-weight:900;font-size:clamp(2.3rem,4.8vw,4.1rem);letter-spacing:-.025em;line-height:1.04}
 h2{font-weight:800;font-size:clamp(1.5rem,2.4vw,2.1rem)}
 h3{font-weight:800;font-size:1.2rem}
@@ -47,7 +47,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .skip:focus{top:12px}
 
 /* ---------- left rail ---------- */
-.rail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);border-right:var(--line);padding:calc(28px + env(safe-area-inset-top,0px)) 20px 24px;display:flex;flex-direction:column;gap:36px;background:var(--bg);z-index:20}
+.rail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);border-right:var(--line);padding:calc(28px + env(safe-area-inset-top,0px)) 20px 24px;display:flex;flex-direction:column;gap:36px;background:var(--bg);z-index:20;overflow-y:auto}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand svg{flex:none}
 .brand strong{display:block;font-weight:900;font-size:1.15rem;line-height:1.1}
@@ -71,6 +71,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lead{font-size:1.12rem}
 .sec{margin-top:96px}
 .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px 64px;align-items:start}
+.finder{grid-template-columns:minmax(280px,4fr) minmax(0,8fr)}
 .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
 .notice{margin-top:56px;padding:16px 20px;border:2px dashed var(--steel);border-radius:var(--r-s);color:var(--steel-text);font-size:.95rem;max-width:none}
 .notice a{color:var(--ink)}
@@ -145,7 +146,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ---------- ledger forms ---------- */
 .ledger{border:var(--line);border-radius:var(--r-m);padding:6px 22px 18px}
-.finder .ledger{position:sticky;top:24px}
+.finder .ledger{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow-y:auto}
 .lrow{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:end;padding:14px 0;border-bottom:2px solid var(--rule)}
 .lrow>label,.lrow>.lab{font-family:var(--font-data);font-size:.86rem;color:var(--steel-text);padding-bottom:7px;line-height:1.3}
 input[type=search],input[type=text],input[type=number],input[type=date],select{width:100%;background:transparent;border:0;border-bottom:2px solid var(--ink);border-radius:0;padding:7px 0;min-height:38px}
@@ -223,14 +224,15 @@ td select,td input{min-height:34px;font-size:.92rem}
 .quiz-card{max-width:780px}
 .quiz-card h2,.q-intro h2,.q-result h2{margin-bottom:10px}
 .opts{display:grid;gap:10px;margin:22px 0}
-.opt{display:grid;grid-template-columns:24px minmax(0,1fr);gap:14px;align-items:center;width:100%;text-align:left;padding:14px 18px;border:var(--line);border-radius:var(--r-s);background:transparent;cursor:pointer;font-weight:700;font-size:1.02rem;transition:border-color .15s,background .15s}
-.opt:hover{background:rgba(102,155,188,.16)}
+.opts .opt{color:var(--ink);margin-left:0;display:grid;grid-template-columns:24px minmax(0,1fr);gap:14px;align-items:center;width:100%;text-align:left;padding:14px 18px;border:var(--line);border-radius:var(--r-s);background:transparent;cursor:pointer;font-weight:700;font-size:1.02rem;transition:border-color .15s,background .15s}
+.opts .opt:hover{background:rgba(102,155,188,.16)}
 .opt .mark{width:22px;height:22px;border:2px solid var(--ink);border-radius:50%}
 .opts[data-multi] .mark{border-radius:6px}
 .opt[aria-pressed="true"]{border-color:var(--red)}
 .opt[aria-pressed="true"] .mark{background:var(--red);border-color:var(--red);box-shadow:inset 0 0 0 4px var(--bg)}
 .opts[data-multi] .opt[aria-pressed="true"] .mark{box-shadow:inset 0 0 0 3px var(--bg)}
 .opt .otext{display:flex;align-items:center;gap:12px}
+.opt .otext svg{flex:none}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn[disabled]:hover{background:var(--red);color:var(--papaya)}
 .q-intro{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:center}
@@ -253,6 +255,11 @@ td select,td input{min-height:34px;font-size:.92rem}
 .reveal.in{opacity:1;transform:none}
 
 /* ---------- responsive ---------- */
+@media (min-width:1900px){
+  html{font-size:112.5%}
+  :root{--rail:280px}
+  .wrap{max-width:1640px}
+}
 @media (max-width:1180px){
   .t-hero{grid-column:span 12;grid-row:auto}
   .t-cd,.t-count{grid-column:span 6}
@@ -261,34 +268,111 @@ td select,td input{min-height:34px;font-size:.92rem}
   .t-test{grid-column:span 7}
   .t-prog{grid-column:span 5}
   .pies{grid-template-columns:1fr 1fr}
+  .split{gap:32px 40px}
   .ev{grid-template-columns:34px minmax(0,1fr) auto}
   .ev .size{grid-column:2;grid-row:2}
 }
-@media (max-width:900px){
-  .rail{position:sticky;top:env(safe-area-inset-top,0px);width:auto;flex-direction:row;align-items:center;gap:18px;padding:10px 14px;border-right:0;border-bottom:var(--line);overflow-x:auto}
+/* rail layout with a narrow filter panel: stack labels over fields */
+@media (min-width:1025px) and (max-width:1400px){
+  .finder .lrow{grid-template-columns:1fr;gap:2px}
+  .finder .lrow>label,.finder .lrow>.lab{padding-bottom:0}
+  .ev{grid-template-columns:34px minmax(0,1fr) auto}
+  .ev .size{grid-column:2;grid-row:2}
+}
+/* rail becomes a top bar */
+@media (max-width:1024px){
+  html{scroll-padding-top:calc(72px + env(safe-area-inset-top,0px))}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);width:auto;flex-direction:row;align-items:center;gap:18px;padding:10px max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));border-right:0;border-bottom:var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
   .rail-note,.brand small{display:none}
-  .nav{display:flex;gap:4px}
-  .nav a{white-space:nowrap;grid-template-columns:auto auto auto;gap:8px;padding:8px 10px}
+  .brand strong{white-space:nowrap}
+  .nav{display:flex;gap:4px;margin-left:auto}
+  .nav a{display:flex;align-items:baseline;gap:8px;white-space:nowrap;padding:8px 10px}
+  .nav a>span:empty{display:none}
   .nav a[aria-current="page"]::before{left:8px;right:8px;top:auto;bottom:-2px;width:auto;height:4px;border-radius:2px}
-  .main{margin-left:0;padding-top:34px}
+  .main{margin-left:0;padding:34px max(clamp(16px,4vw,72px),env(safe-area-inset-right,0px)) 110px max(clamp(16px,4vw,72px),env(safe-area-inset-left,0px))}
   .page-head,.split{grid-template-columns:1fr}
-  .finder .ledger{position:static}
+  .finder .ledger{position:static;max-height:none;overflow:visible}
   .kanban{grid-template-columns:1fr}
   .sec{margin-top:72px}
 }
+@media (min-width:600px) and (max-width:1024px){
+  .finder .ledger{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
+  .finder .ledger-foot{grid-column:1/-1}
+}
+/* short landscape phones: don't pin the bar */
+@media (max-width:1024px) and (max-height:480px){
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  .rail{position:static}
+}
 @media (max-width:700px){
-  .bento{display:flex;flex-direction:column}
+  h1{font-size:clamp(1.85rem,8.2vw,2.3rem)}
+  .bento{display:flex;flex-direction:column;gap:16px}
   .tile{padding:22px}
   .t-hero{padding:26px}
   .hero-in{grid-template-columns:1fr}
   .hero-in .art{width:96px;order:-1}
+  .t-hero h1{margin-bottom:.4em}
+  .big{font-size:2.8rem}
   .pies{grid-template-columns:1fr}
   .parts li{grid-template-columns:1fr;gap:0}
   .q-intro{grid-template-columns:1fr}
+  .q-intro .art{max-width:150px}
   .summary>div{grid-template-columns:1fr;gap:0}
   .dlg{padding:22px 20px}
-  .acc-panel p{padding-left:22px}
+  .dlg h2{font-size:1.5rem}
+  .dlg dl>div{grid-template-columns:1fr;gap:0}
+  .acc-btn{padding:16px;gap:12px}
+  .acc-panel p{padding:0 16px 18px}
   .ev{padding:16px}
+  .page-head{margin-bottom:32px}
+  .sec{margin-top:56px}
+  .notice{margin-top:40px}
+}
+@media (max-width:640px){
+  .rail{gap:10px}
+  .nav .n{display:none}
+  .nav a{padding:8px}
+}
+@media (max-width:520px){
+  .brand strong{display:none}
+}
+@media (max-width:480px){
+  .nav{gap:2px}
+  .nav a{padding:8px 6px}
+  .main{padding-top:24px}
+  .tile{padding:18px}
+  .t-hero{padding:22px}
+  .lead{font-size:1.05rem}
+  .type-grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+  .test-in{grid-template-columns:minmax(0,1fr) 56px}
+  .test-in .art{width:56px}
+  .actions .btn{flex:1 1 auto}
+  .ledger{padding:4px 16px 16px}
+  .lrow{grid-template-columns:1fr;gap:2px}
+  .lrow>label,.lrow>.lab{padding-bottom:0}
+  .ev{grid-template-columns:30px minmax(0,1fr);gap:6px 12px;align-items:start}
+  .ev>:nth-child(n+3){grid-column:2}
+  .ev .size{grid-row:auto}
+  .opts .opt{padding:12px 14px;gap:12px}
+}
+@media (max-width:400px){
+  .brand{display:none}
+  .nav{margin-left:0;flex:1;justify-content:space-between}
+}
+@media (max-width:340px){
+  .nav a{font-size:.9rem}
+}
+/* touch: comfortable tap targets */
+@media (pointer:coarse){
+  .btn,.x,.seg button,.toast button{min-height:44px}
+  .x{width:44px}
+  .seg button{padding:8px 2px}
+  .nav a{min-height:44px;align-items:center}
+  input[type=search],input[type=text],input[type=number],input[type=date],select{min-height:44px}
+  .linkbtn{padding:6px 0}
+  .chips a{padding:9px 12px}
+  .ledger-list a{display:inline-block;padding:4px 0}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -688,7 +772,7 @@ function vFinder(){
     <h1 id="h1">Event Finder</h1>
     <p class="lead">Narrow ${EVENTS.length} events and event groups by track, type and team size. UTE Projects are grouped, so one entry can cover many event numbers. Open one for details, or take the quiz.</p>
   </header>
-  <div class="split finder" style="grid-template-columns:minmax(280px,4fr) minmax(0,8fr)">
+  <div class="split finder">
     <form class="ledger reveal" id="filters" aria-label="Filter events" onsubmit="return false">
       <div class="lrow"><label for="fq">Search</label><input id="fq" type="search" data-field="q" placeholder="Robotics, photography, laser" value="${esc(F.q)}" autocomplete="off"></div>
       <div class="lrow"><span class="lab" id="lvlab">Track</span>
