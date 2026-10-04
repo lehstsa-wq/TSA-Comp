@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TSA Event Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papaya:#fdf0d5;      /* light text on dark tiles and buttons */
+  --bg:#ffffff;
+  --ink:#003049;
+  --steel:#669bbc;
+  --steel-text:#386b8d;      /* Steel Blue, darkened just enough for small text to pass contrast on Papaya Whip */
+  --red:#c1121f;
+  --lava:#780000;
+  --rule:rgba(102,155,188,.5);
+  --line:2px solid var(--ink);
+  --r-s:10px; --r-m:14px; --r-l:16px;
+  --font-body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-data:'Comic Sans MS','Comic Neue',cursive;
+  --rail:248px;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.6 var(--font-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-body);margin:0;line-height:1.15;letter-spacing:-.01em}
+h1{font-weight:900;font-size:clamp(2.3rem,4.8vw,4.1rem);letter-spacing:-.025em;line-height:1.04}
+h2{font-weight:800;font-size:clamp(1.5rem,2.4vw,2.1rem)}
+h3{font-weight:800;font-size:1.2rem}
+p{margin:0 0 1em;max-width:64ch}
+a{color:inherit;text-decoration-color:var(--steel);text-decoration-thickness:2px;text-underline-offset:4px}
+a:hover{color:var(--lava)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px;border-radius:4px}
+.data{font-family:var(--font-data)}
+.muted{color:var(--steel-text)}
+.opt{color:var(--steel);font-weight:700;margin-left:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:12px;top:-60px;background:var(--ink);color:var(--papaya);padding:10px 16px;border-radius:var(--r-s);z-index:100;transition:top .15s}
+.skip:focus{top:12px}
+
+/* ---------- left rail ---------- */
+.rail{position:fixed;left:0;top:0;bottom:0;width:var(--rail);border-right:var(--line);padding:calc(28px + env(safe-area-inset-top,0px)) 20px 24px;display:flex;flex-direction:column;gap:36px;background:var(--bg);z-index:20}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand svg{flex:none}
+.brand strong{display:block;font-weight:900;font-size:1.15rem;line-height:1.1}
+.brand small{font-family:var(--font-data);color:var(--steel-text);font-size:.8rem}
+.nav{display:grid;gap:6px}
+.nav a{position:relative;display:grid;grid-template-columns:34px 1fr auto;align-items:baseline;padding:11px 12px;border:2px solid transparent;border-radius:var(--r-s);text-decoration:none;font-weight:700;transition:border-color .2s,background .2s}
+.nav a:hover{border-color:var(--ink);color:var(--ink)}
+.nav .n{font-family:var(--font-data);color:var(--steel-text);font-weight:700}
+.nav a[aria-current="page"]{border-color:var(--ink)}
+.nav a[aria-current="page"]::before{content:"";position:absolute;left:-22px;top:10px;bottom:10px;width:6px;border-radius:0 4px 4px 0;background:var(--red)}
+.nav a[aria-current="page"] .n{color:var(--red)}
+.badge{font-family:var(--font-data);font-size:.8rem;border:2px solid var(--steel);border-radius:999px;padding:0 8px;line-height:1.4;color:var(--steel-text)}
+.rail-note{margin-top:auto;font-family:var(--font-data);font-size:.8rem;color:var(--steel-text);line-height:1.5}
+
+/* ---------- main ---------- */
+.main{margin-left:var(--rail);padding:56px clamp(22px,4vw,72px) 110px}
+.wrap{max-width:1440px;margin:0 auto;transition:opacity .2s ease}
+.wrap.leaving{opacity:0}
+.page-head{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px 48px;align-items:end;margin-bottom:48px}
+.page-head p{margin:0}
+.lead{font-size:1.12rem}
+.sec{margin-top:96px}
+.split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px 64px;align-items:start}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.notice{margin-top:56px;padding:16px 20px;border:2px dashed var(--steel);border-radius:var(--r-s);color:var(--steel-text);font-size:.95rem;max-width:none}
+.notice a{color:var(--ink)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:2px solid var(--ink);border-radius:var(--r-s);background:transparent;color:var(--ink);font-weight:800;font-size:.95rem;line-height:1.1;cursor:pointer;text-decoration:none;transition:background .15s,color .15s,border-color .15s}
+.btn:hover{background:var(--ink);color:var(--papaya)}
+.btn.primary{background:var(--red);border-color:var(--red);color:var(--papaya)}
+.btn.primary:hover,.btn.primary:active{background:var(--lava);border-color:var(--lava);color:var(--papaya)}
+.btn.sm{padding:8px 13px;font-size:.86rem}
+.btn.danger{background:var(--lava);border-color:var(--lava);color:var(--papaya)}
+.btn.on-dark{border-color:var(--papaya);color:var(--papaya)}
+.btn.on-dark:hover{background:var(--papaya);color:var(--ink)}
+.linkbtn{background:none;border:0;padding:0;text-align:left;cursor:pointer;font-weight:800;font-size:1.12rem;line-height:1.3;text-decoration:underline;text-decoration-color:var(--steel);text-decoration-thickness:2px;text-underline-offset:4px}
+.linkbtn:hover{color:var(--lava)}
+
+/* ---------- bento ---------- */
+.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;grid-auto-rows:minmax(150px,auto)}
+.tile{border:var(--line);border-radius:var(--r-m);padding:28px;position:relative;overflow:hidden}
+.tile.dark{background:var(--ink);color:var(--papaya)}
+.tile.dark a{text-decoration-color:var(--steel)}
+.tile.dark a:hover{color:var(--papaya)}
+.tile h2{font-size:1.5rem;margin-bottom:14px}
+.t-hero{grid-column:span 7;grid-row:span 2;border-radius:var(--r-l);padding:40px}
+.t-cd{grid-column:span 5}
+.t-count{grid-column:span 5}
+.t-types{grid-column:span 7}
+.t-teams{grid-column:span 5;grid-row:span 2}
+.t-test{grid-column:span 4}
+.t-prog{grid-column:span 3}
+.hero-in{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:28px;align-items:end;height:100%}
+.hero-in .art{width:150px;color:var(--ink)}
+.art{display:block;width:100%;height:auto}
+.big{font-weight:900;font-size:3.4rem;line-height:1;margin:6px 0 4px}
+.big span{font-size:1.2rem;font-weight:700}
+.ledger-list{list-style:none;margin:0;padding:0}
+.ledger-list li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:10px 0;border-bottom:2px solid var(--rule)}
+.ledger-list li:last-child{border-bottom:0}
+.ledger-list a{font-weight:800;text-decoration:none}
+.ledger-list a:hover{text-decoration:underline}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.type-grid a{display:grid;grid-template-columns:30px 1fr;gap:4px 10px;align-items:center;padding:12px 14px;border:var(--line);border-radius:var(--r-s);text-decoration:none;transition:background .15s,color .15s}
+.type-grid a:hover{background:var(--ink);color:var(--papaya)}
+.type-grid b{font-weight:800;line-height:1.15}
+.type-grid .data{grid-column:2;font-size:.82rem;opacity:.85}
+.parts{list-style:none;margin:16px 0;padding:0}
+.parts li{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:9px 0;border-bottom:2px solid var(--rule);font-size:.95rem}
+.parts li:last-child{border-bottom:0}
+.parts .data{color:var(--steel-text);font-size:.88rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.chips a{display:inline-block;padding:5px 11px;border:2px solid var(--steel);border-radius:var(--r-s);font-size:.88rem;font-weight:700;text-decoration:none}
+.chips a:hover{background:var(--papaya);color:var(--ink)}
+.test-in{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:16px}
+.test-in .art{color:var(--papaya);width:84px}
+.bar{height:18px;border:2px solid var(--ink);border-radius:var(--r-s);overflow:hidden;margin:12px 0 10px}
+.bar>i{display:block;height:100%;background:var(--steel);transition:width .5s ease}
+
+/* ---------- accordion ---------- */
+.acc{border:var(--line);border-radius:var(--r-m);overflow:hidden}
+.acc-item+.acc-item{border-top:var(--line)}
+.acc-btn{display:grid;grid-template-columns:36px 1fr auto;gap:14px;align-items:center;width:100%;padding:18px 22px;background:none;border:0;text-align:left;cursor:pointer;font-weight:800;font-size:1.08rem}
+.acc-btn:hover{background:rgba(102,155,188,.18)}
+.acc-btn .pm{width:14px;height:14px;position:relative}
+.acc-btn .pm::before,.acc-btn .pm::after{content:"";position:absolute;left:0;right:0;top:6px;height:2px;background:var(--ink);transition:transform .3s}
+.acc-btn .pm::after{transform:rotate(90deg)}
+.acc-item.open .pm::after{transform:rotate(0)}
+.acc-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s ease}
+.acc-panel>div{overflow:hidden;visibility:hidden;transition:visibility 0s .32s}
+.acc-panel p{padding:0 22px 20px 72px;margin:0}
+.acc-item.open .acc-panel{grid-template-rows:1fr}
+.acc-item.open .acc-panel>div{visibility:visible;transition-delay:0s}
+
+/* ---------- ledger forms ---------- */
+.ledger{border:var(--line);border-radius:var(--r-m);padding:6px 22px 18px}
+.finder .ledger{position:sticky;top:24px}
+.lrow{display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:end;padding:14px 0;border-bottom:2px solid var(--rule)}
+.lrow>label,.lrow>.lab{font-family:var(--font-data);font-size:.86rem;color:var(--steel-text);padding-bottom:7px;line-height:1.3}
+input[type=search],input[type=text],input[type=number],input[type=date],select{width:100%;background:transparent;border:0;border-bottom:2px solid var(--ink);border-radius:0;padding:7px 0;min-height:38px}
+select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-position:calc(100% - 9px) 55%,calc(100% - 4px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:20px}
+input::placeholder{color:var(--steel-text);opacity:.8}
+.seg{display:flex;flex-wrap:wrap;gap:4px 16px}
+.seg button{background:none;border:0;border-bottom:3px solid transparent;padding:6px 0 3px;font-weight:700;font-size:.93rem;cursor:pointer}
+.seg button[aria-pressed="true"]{border-bottom-color:var(--red)}
+.seg button:hover{color:var(--lava)}
+.ledger-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:18px;font-size:.85rem}
+.tile.dark .lrow{border-bottom-color:rgba(102,155,188,.6);padding-bottom:6px}
+.tile.dark .lrow>label{color:var(--steel)}
+.tile.dark input{border-bottom-color:var(--papaya);color:var(--papaya);color-scheme:dark}
+
+/* ---------- results ---------- */
+.count{font-size:.9rem;color:var(--steel-text);margin:0 0 12px}
+.results{list-style:none;margin:0;padding:0;border:var(--line);border-radius:var(--r-m);overflow:hidden}
+.ev{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(130px,190px) auto;gap:6px 20px;align-items:center;padding:18px 22px;border-bottom:2px solid var(--rule)}
+.ev:last-child{border-bottom:0}
+.ev .ico{color:var(--ink)}
+.ev h3{font-size:1.12rem;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:2px 14px;font-family:var(--font-data);font-size:.82rem;color:var(--steel-text);margin-top:3px}
+.ev .size{font-family:var(--font-data);font-size:.84rem;line-height:1.45}
+.ev .size span{display:block;color:var(--steel-text)}
+.state{font-family:var(--font-data);font-size:.82rem;color:var(--steel-text);margin-right:10px}
+.empty{padding:44px 24px;text-align:center}
+.empty .art{width:110px;margin:0 auto 12px}
+.empty p{margin:0 auto 18px}
+
+/* ---------- dialog (soft shadow allowed here) ---------- */
+dialog{padding:0;border:var(--line);border-radius:var(--r-l);background:var(--bg);color:var(--ink);width:min(640px,calc(100% - 28px));max-height:calc(100% - 40px);box-shadow:0 24px 60px rgba(0,48,73,.28)}
+dialog::backdrop{background:rgba(0,48,73,.55)}
+.dlg{padding:30px 32px 30px}
+.dlg-top{display:flex;justify-content:space-between;gap:16px;align-items:start}
+.dlg h2{font-size:1.9rem;margin:6px 0 4px}
+.dlg dl{margin:20px 0;border-top:2px solid var(--rule)}
+.dlg dl>div{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:10px 0;border-bottom:2px solid var(--rule)}
+.dlg dt{font-family:var(--font-data);font-size:.86rem;color:var(--steel-text)}
+.dlg dd{margin:0}
+.dlg .actions{margin-top:20px}
+.x{background:none;border:var(--line);border-radius:var(--r-s);width:40px;height:40px;cursor:pointer;font-size:1.2rem;line-height:1;flex:none}
+.x:hover{background:var(--ink);color:var(--papaya)}
+
+/* ---------- lineup ---------- */
+.accent-rule{width:72px;height:6px;border-radius:3px;background:var(--steel);margin:12px 0 22px}
+.tbl-wrap{border:var(--line);border-radius:var(--r-m);overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{font-family:var(--font-data);font-weight:700;font-size:.84rem;color:var(--steel-text);text-align:left;padding:12px 16px;border-bottom:2px solid var(--ink)}
+td{padding:12px 16px;border-bottom:2px solid var(--rule);vertical-align:middle;font-size:.95rem}
+tr:last-child td{border-bottom:0}
+td select,td input{min-height:34px;font-size:.92rem}
+.kanban{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.kcol{border:var(--line);border-radius:var(--r-m);padding:20px;transition:outline-color .15s;outline:3px dashed transparent;outline-offset:3px}
+.kcol.over{outline-color:var(--red)}
+.khead{display:grid;grid-template-columns:62px 1fr;gap:14px;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:4px solid var(--steel)}
+.khead .art{width:62px}
+.khead p{margin:0;font-family:var(--font-data);font-size:.84rem;color:var(--steel-text)}
+.kbody{display:grid;gap:12px;min-height:90px;align-content:start}
+.kcard{border:var(--line);border-radius:var(--r-s);padding:12px 14px;background:var(--bg);cursor:grab}
+.kcard.dragging{opacity:.45}
+.kcard .linkbtn{font-size:1rem}
+.kcard .btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.kempty{font-family:var(--font-data);font-size:.85rem;color:var(--steel-text);margin:0;padding:6px 2px}
+.pies{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:20px}
+.pie-card{border:var(--line);border-radius:var(--r-m);padding:24px}
+.pie-card h3{margin-bottom:16px}
+.pie-card svg{width:150px;height:150px;display:block;margin-bottom:16px}
+.legend{list-style:none;margin:0;padding:0;font-size:.92rem}
+.legend li{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;padding:4px 0}
+.legend .sw{width:14px;height:14px;border-radius:4px;border:2px solid var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.legend b{font-family:var(--font-data);font-weight:700;font-size:.85rem}
+.print-only{display:none}
+
+/* ---------- quiz ---------- */
+.quiz-card{max-width:780px}
+.quiz-card h2,.q-intro h2,.q-result h2{margin-bottom:10px}
+.opts{display:grid;gap:10px;margin:22px 0}
+.opt{display:grid;grid-template-columns:24px minmax(0,1fr);gap:14px;align-items:center;width:100%;text-align:left;padding:14px 18px;border:var(--line);border-radius:var(--r-s);background:transparent;cursor:pointer;font-weight:700;font-size:1.02rem;transition:border-color .15s,background .15s}
+.opt:hover{background:rgba(102,155,188,.16)}
+.opt .mark{width:22px;height:22px;border:2px solid var(--ink);border-radius:50%}
+.opts[data-multi] .mark{border-radius:6px}
+.opt[aria-pressed="true"]{border-color:var(--red)}
+.opt[aria-pressed="true"] .mark{background:var(--red);border-color:var(--red);box-shadow:inset 0 0 0 4px var(--bg)}
+.opts[data-multi] .opt[aria-pressed="true"] .mark{box-shadow:inset 0 0 0 3px var(--bg)}
+.opt .otext{display:flex;align-items:center;gap:12px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn[disabled]:hover{background:var(--red);color:var(--papaya)}
+.q-intro{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;align-items:center}
+.q-intro .art{max-width:240px;margin:0 auto}
+.summary{margin:18px 0 30px;border-top:2px solid var(--rule);max-width:760px}
+.summary>div{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:10px 0;border-bottom:2px solid var(--rule)}
+.summary dt{font-family:var(--font-data);font-size:.86rem;color:var(--steel-text)}
+.summary dd{margin:0}
+.tier{display:block;font-family:var(--font-body);font-weight:800;font-size:.95rem}
+
+/* ---------- toasts ---------- */
+#toasts{position:fixed;inset:auto 0 calc(22px + env(safe-area-inset-bottom,0px)) 0;margin:0 auto;width:min(92vw,460px);height:auto;padding:0;border:0;background:transparent;overflow:visible;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:200}
+.toast{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--ink);color:var(--papaya);border-radius:var(--r-s);padding:12px 16px;font-weight:700;font-size:.93rem;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:auto}
+.toast.show{opacity:1;transform:none}
+.toast button{background:none;border:2px solid var(--papaya);color:var(--papaya);border-radius:var(--r-s);padding:4px 10px;font-weight:800;cursor:pointer}
+.toast button:hover{background:var(--papaya);color:var(--ink)}
+
+/* ---------- reveals ---------- */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .t-hero{grid-column:span 12;grid-row:auto}
+  .t-cd,.t-count{grid-column:span 6}
+  .t-types{grid-column:span 12}
+  .t-teams{grid-column:span 12;grid-row:auto}
+  .t-test{grid-column:span 7}
+  .t-prog{grid-column:span 5}
+  .pies{grid-template-columns:1fr 1fr}
+  .ev{grid-template-columns:34px minmax(0,1fr) auto}
+  .ev .size{grid-column:2;grid-row:2}
+}
+@media (max-width:900px){
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);width:auto;flex-direction:row;align-items:center;gap:18px;padding:10px 14px;border-right:0;border-bottom:var(--line);overflow-x:auto}
+  .rail-note,.brand small{display:none}
+  .nav{display:flex;gap:4px}
+  .nav a{white-space:nowrap;grid-template-columns:auto auto auto;gap:8px;padding:8px 10px}
+  .nav a[aria-current="page"]::before{left:8px;right:8px;top:auto;bottom:-2px;width:auto;height:4px;border-radius:2px}
+  .main{margin-left:0;padding-top:34px}
+  .page-head,.split{grid-template-columns:1fr}
+  .finder .ledger{position:static}
+  .kanban{grid-template-columns:1fr}
+  .sec{margin-top:72px}
+}
+@media (max-width:700px){
+  .bento{display:flex;flex-direction:column}
+  .tile{padding:22px}
+  .t-hero{padding:26px}
+  .hero-in{grid-template-columns:1fr}
+  .hero-in .art{width:96px;order:-1}
+  .pies{grid-template-columns:1fr}
+  .parts li{grid-template-columns:1fr;gap:0}
+  .q-intro{grid-template-columns:1fr}
+  .summary>div{grid-template-columns:1fr;gap:0}
+  .dlg{padding:22px 20px}
+  .acc-panel p{padding-left:22px}
+  .ev{padding:16px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;transition-delay:0s!important;animation:none!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+}
+
+/* ---------- print ---------- */
+@media print{
+  :root{padding:0}
+  body{background:#fff;color:#000;font-size:11pt}
+  .rail,#toasts,dialog,.no-print,.skip,.btn,.linkbtn.nopr,.kcard .btns{display:none!important}
+  .main{margin:0;padding:0}
+  .reveal{opacity:1!important;transform:none!important}
+  .tile,.pie-card,.kcol,.tbl-wrap{break-inside:avoid}
+  .print-only{display:block}
+  .tbl-wrap{overflow:visible}
+  table{min-width:0}
+  .kanban{grid-template-columns:repeat(3,1fr)}
+  .linkbtn{text-decoration:none}
+  a{text-decoration:none}
+  .sec{margin-top:36px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<aside class="rail">
+  <a class="brand" href="#/overview" aria-label="TSA Event Picker, overview">
+    <svg width="36" height="36" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><circle cx="16" cy="16" r="13"/><path d="M21.5 10.5l-3.2 7.8-7.8 3.2 3.2-7.8z"/></svg>
+    <span><strong>Event Picker</strong><small>Texas TSA high school</small></span>
+  </a>
+  <nav class="nav" aria-label="Main">
+    <a href="#/overview" data-page="overview"><span class="n">01</span>Overview<span></span></a>
+    <a href="#/finder" data-page="finder"><span class="n">02</span>Event Finder<span></span></a>
+    <a href="#/quiz" data-page="quiz"><span class="n">03</span>Event Quiz<span></span></a>
+  </nav>
+  <p class="rail-note">Your quiz result is saved in this browser only.</p>
+</aside>
+
+<main id="main" class="main"><div class="wrap" id="view"></div></main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="dlg" id="dlgBody"></div></dialog>
+<div id="toasts" popover="manual" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px">The event picker needs JavaScript to run.</p></noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= helpers ================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const reduce=()=>window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ================= data ================= */
+const TYPES={
+  build:{label:'Build',blurb:'Design, build, test and demonstrate a physical solution.',p:'<circle cx="16" cy="16" r="5"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4M7 7l3 3M22 22l3 3M25 7l-3 3M10 22l-3 3"/>'},
+  create:{label:'Create',blurb:'Produce original design, media or written work.',p:'<path d="M5 27l2-7L21 6l5 5L12 25z"/><path d="M18 9l5 5"/>'},
+  speak:{label:'Speak',blurb:'Research, prepare and deliver speeches, debates or presentations.',p:'<path d="M5 6h22v14H14l-6 6v-6H5z"/>'},
+  quiz:{label:'Quiz',blurb:'Answer questions or solve a problem onsite against the clock.',p:'<circle cx="16" cy="16" r="12"/><path d="M12.5 12.5a3.8 3.8 0 117.2 1.6c-1 1.8-3.7 2.2-3.7 4.9"/><path d="M16 23.2v.1"/>'},
+  code:{label:'Code',blurb:'Program, secure or digitally build software and systems.',p:'<path d="M11 9l-7 7 7 7M21 9l7 7-7 7M18 6l-4 20"/>'},
+  lead:{label:'Lead',blurb:'Run meetings, teach, and represent your chapter.',p:'<path d="M8 28V4M8 5h16l-4 6 4 6H8"/>'},
+  investigate:{label:'Investigate',blurb:'Research a science, health or data problem and present your findings.',p:'<circle cx="14" cy="14" r="8"/><path d="M20 20l8 8"/>'}
+};
+const TYPE_KEYS=Object.keys(TYPES);
+const ico=(t,s=28)=>`<svg class="ico" width="${s}" height="${s}" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${TYPES[t].p}</svg>`;
+
+const LEVELS={
+  nqe:{label:'High school NQE',short:'NQE',link:'https://tsaweb.org/competitions-programs/tsa/high-school-competitions',linkText:'National TSA high school event guide'},
+  uteo:{label:'UTE On-Site',short:'UTE On-Site',link:'https://texastsarulebook.org/category/ute-on-site-events',linkText:'Texas TSA rulebook: UTE On-Site events'},
+  utep:{label:'UTE Project',short:'UTE Project',link:'https://texastsarulebook.org/category/ute-high-school-projects',linkText:'Texas TSA rulebook: UTE High School Projects'},
+  teams:{label:'TEAMS',short:'TEAMS',link:'https://tsaweb.org/teams/teams',linkText:'TEAMS website'}
+};
+const RULEBOOK='https://texastsarulebook.org/';
+
+/* name | type | mode (team, solo, either) | team size | entry limit | events in group | rulebook page | summary */
+const RAW={
+nqe:`Animatronics|build|team|2-3|3 teams per state
+Architectural Design|create|either|2-4|2 teams per state
+Artificial Intelligence|code|team|2|1 team per chapter
+Audio Podcasting|create|either||3 teams per state
+Automated Manufacturing Systems|build|team|2-3|2 teams per state
+Biotechnology Design|investigate|team||1 team per chapter
+Board Game Design|create|team|2-4|3 teams per state
+Chapter Team|lead|team|6|1 team per chapter
+Children's Stories|create|either||3 entries per state
+Computer-Aided Design (CAD), Architecture|create|solo||2 individuals per state
+Computer-Aided Design (CAD), Engineering|build|solo||2 individuals per state
+Cybersecurity|code|team|2-4|1 team per chapter
+Data Science and Analytics|investigate|either|2|3 teams per state
+Debating Technological Issues|speak|team|2|3 teams per state
+Digital Video Production|create|either||3 entries per state
+Dragster Design|build|solo||2 individuals per chapter
+Drone Challenge (UAV)|build|team|2-6|3 teams per state
+Engineering Design|build|team|2-4|5 teams per state
+Extemporaneous Speech|speak|solo||3 individuals per state
+Fashion Design and Technology|create|team|2-4|5 teams per state
+Flight Endurance|build|solo||2 individuals per chapter
+Forensic Science|investigate|team|2|1 team per chapter
+Future Technology and Engineering Teacher|lead|solo||2 individuals per chapter
+Hybrid Racer XL|build|team|2-4|1 team per chapter
+Interior Design|create|either|2|3 teams per state
+Manufacturing Prototype|build|team||1 team per chapter
+Music Production|create|either||3 teams per state
+On Demand Video|create|team||1 team per chapter
+Photographic Technology|create|solo||1 individual per chapter
+Prepared Presentation|speak|solo||3 individuals per state
+Promotional Design|create|solo||3 individuals per state
+Robotics|build|team|2-6|2 teams per state
+Software Development|code|team||1 team per chapter
+STEM Mass Media|create|team|2-3|1 team per chapter
+Structural Design and Engineering|build|team|2|1 team per chapter
+Technology Bowl|quiz|team|3|1 team per chapter
+Technology Problem Solving|quiz|team|2|1 team per chapter
+Transportation Modeling|build|solo||1 individual per chapter
+Video Game Design|code|team||5 teams per state
+Virtual Reality Simulation (VR)|code|either||1 team per chapter
+Vlogging|create|team|2-6|2 teams per chapter
+Webmaster|code|either|1-6|1 team per chapter`,
+uteo:`Hot Rod CO2 Car|build|solo||State attendance required|2|ute-onsite-events/hot-rod-co2-car-competition|Design and build a realistic quarter-mile hot rod model from several parts, then race it. Two classes: wood or ABS plastic.
+CO2 Research Racer|build|solo||State attendance required|2|ute-onsite-events/co2-research-racer|Shape a single piece into a CO2-powered race car body that runs down a track of about 60 feet. Two classes: wood or ABS plastic.
+RC Vehicle (Electric)|build|team|2-4|State attendance required|1|ute-onsite-events/rc-vehicle|Build your own electric RC car from your own design or a kit, then race it on a road course. Store-bought assembled cars are not allowed.
+Drone Competition|build|team|2-3|State attendance required|1|ute-onsite-events/drone-competition|Fly drones across a city course to read wireless smart meters and send the data back as fast as you can.
+Catapult/Trebuchet|build|team|2-4|State attendance required|1|ute-onsite-events/catapult-trebuchet|Build a trebuchet-style catapult that throws a projectile.
+On-Site Computer Skills Contest|create|solo||State attendance required|3|ute-onsite-events/on-site-computer-skills-contest|One hour on your own laptop, judged on your screen. Three events: animation, artistic graphic design, and multimedia presentation. No internet is provided and software cannot be cloud based.
+Graphic Solutions|create|solo||State attendance required|6|ute-onsite-events/graphic-solutions|One hour to solve a drawing problem with only a clipboard, pencils and erasers. Six categories: technology problem solving, architecture and construction, engineering design, promotional design and marketing, manufacturing design, and information technology.
+Promotional Video|create|team|2-4|State attendance required|1|ute-onsite-events/promotional-video|Produce a promotional film onsite at the state conference. Props and a line of dialogue are revealed at orientation, and teams get 24 hours.
+Social Media Marketing|create|team|2-4|State attendance required|1|ute-onsite-events/social-media-marketing|Promote an event on social media, produced onsite at the state conference. Hashtags, content and a theme are revealed at orientation, and teams get 24 hours.
+VEX V5 Robotics Competition (V5RC)|build|team||Invitational, up to 2 teams per chapter|1|rec-foundation-robotics|Texas hosts an invitational VEX V5 tournament instead of the national robotics contest. Invitations go to teams with the top Skills scores, and the top high school teams can advance to nationals. Registration and a recorded Skills score are required.`,
+utep:`Exploratory: CNC/CAM Fidget Toy|build|either||BEG|1|ute-high-school-projects/exploratory|Use CNC/CAM to make a fidget toy of at least two parts that you designed yourself.
+Exploratory: Wood Birdhouse|build|either||BEG|1|ute-high-school-projects/exploratory|Build a painted or stained birdhouse with an opening, a perch and a way to hang it.
+Exploratory: Metal Windmill|build|either||BEG|1|ute-high-school-projects/exploratory|Build a tabletop windmill with blades that turn.
+Exploratory: Materials Pet Toy|build|either||BEG|1|ute-high-school-projects/exploratory|Make an interactive pet toy from two or more materials, at least one recycled.
+Exploratory: Graphic Design Flyer|create|either||BEG|1|ute-high-school-projects/exploratory|Design a flyer for a meeting, event or opportunity with your TSA chapter.
+Exploratory: Multimedia How-To Video|create|either||BEG|1|ute-high-school-projects/exploratory|Make a how-to video on folding a paper airplane, under 60 seconds.
+Exploratory: Computer Science Algorithm|code|either||BEG|1|ute-high-school-projects/exploratory|Write a procedure that uses sequencing, selection and iteration, with comments marking each.
+Exploratory: Photography|create|either||BEG|1|ute-high-school-projects/exploratory|Photograph an activity you enjoy outside of school, in color.
+Exploratory: Engineering Sketch|create|either||BEG|1|ute-high-school-projects/exploratory|Sketch the top, front and right views of a given power tool on one sheet.
+Exploratory: Architecture Sketch|create|either||BEG|1|ute-high-school-projects/exploratory|Free-hand sketch an exterior view of a given house plan.
+Exploratory: Scale Model|build|either||BEG|1|ute-high-school-projects/exploratory|Build a scale model of an 8 by 16 foot shed with a floor plan and removable roof.
+Exploratory: Applied Science Display|investigate|either||BEG|1|ute-high-school-projects/exploratory|Propose an experiment to test a new vaccine, including trials and lab tests.
+Exploratory: Applied Science Prototype|investigate|either||BEG|1|ute-high-school-projects/exploratory|Build a wind generator prototype and explain how it turns wind into energy.
+CNC/CAM Mill, Router and Lathe|build|either||P7|6|ute-high-school-projects/manufacturing|Wood or other materials, as a single piece, two or more parts, or a pen or pencil set.
+CNC/CAM Laser Engraver|build|either||P7|4|ute-high-school-projects/manufacturing|Wood or other materials, as a single piece or two or more parts.
+CNC/CAM Plasma Cutter|build|either||P7|2|ute-high-school-projects/manufacturing|Metal projects as a single piece or two or more parts.
+CNC/CAM Embroidery and Vinyl Cutter|create|either||P7|2|ute-high-school-projects/manufacturing|Embroidery and vinyl cutter projects.
+3D Printing and Rapid Prototype|build|either||P7|7|ute-high-school-projects/manufacturing|Engineering parts (single, 2 to 5, or 6 or more), architecture, biomedical and all other subjects.
+Wood: Manually Turned|build|either||P7|2|ute-high-school-projects/manufacturing|Pens, pencils and sets, or single and multiple parts turned with traditional lathe tools.
+Wood: Indoor Projects|build|either||P7|5|ute-high-school-projects/manufacturing|Furniture and other indoor pieces in five size classes.
+Wood: Outdoor Projects|build|either||P7|5|ute-high-school-projects/manufacturing|Picnic tables, outdoor furniture and swings in five size classes.
+Metals: Decorative|build|either||P7|6|ute-high-school-projects/manufacturing|Signs, yard art and nameplates in six size classes.
+Metals: Functional|build|either||P7|7|ute-high-school-projects/manufacturing|Fire pits, grills, smokers and farm equipment in seven size classes.
+Metals: Trailers|build|either||P7|1|ute-high-school-projects/manufacturing|Single and double axle trailers.
+Materials: PVC|build|either||P7|3|ute-high-school-projects/manufacturing|PVC projects in three size classes.
+Materials: Manual Turning (Not Wood)|build|either||P7|2|ute-high-school-projects/manufacturing|Pens, pencils and sets, or single and multiple turned parts in other materials.
+Materials: Plastics, Resins, Fabric and More|build|either||P7|12|ute-high-school-projects/manufacturing|Injection molding, vacuum forming, casting, resins, composites, acrylics, fabric, glass, leather, paper and combinations.
+Wood and Metal Mixed Materials|build|either||P7|5|ute-high-school-projects/manufacturing|Projects combining at least two materials, one of them wood or metal, in five size classes.
+Restoration|build|either||P7|4|ute-high-school-projects/manufacturing|Restore furniture, machines, electrical appliances or toys, with a before-and-after work history.
+Recycled Materials|build|either||P7|5|ute-high-school-projects/manufacturing|Wood, metal, electronics, plastic or mixed projects made from at least 50 percent recycled material.
+Graphic Design: Business Documents|create|either||P7|10|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Business cards, certificates, flyers, letterhead, calendars, folded handouts, posters and a thematic portfolio.
+Graphic Design: Publications|create|either||P7|4|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Bound documents, yearbook layouts, newsletters and magazine layouts.
+Graphic Design: Marketing and Product Graphics|create|either||P7|7|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Labels, packaging, stickers, image transfer, sublimation, screen printing and product ads.
+Technical Reports|investigate|either||P7|4|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Four-page reports on architecture and construction, engineering design, information technology or biotechnology.
+Multimedia: Presentations|create|either||P7|2|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Computer-generated presentations of 1 to 10 or 11 to 20 slides.
+Multimedia: Audio Editing|create|either||P7|2|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Audio edits of 30 seconds or 2 minutes.
+Multimedia: Video Editing|create|either||P7|13|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Commercials, special effects, promos, newscasts, short films, musicals and drone videography.
+Multimedia: Computer Generated Graphics|create|either||P7|7|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Cover art, character turnaround sheets, landscapes, 3D images and wallpaper.
+Multimedia: 2D Animation|create|either||P7|8|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Animatics, story animation, commercials, introductions and stop motion.
+Multimedia: 3D Animation|create|either||P7|7|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Science modeling, story animation, commercials and introductions.
+Computer Science: Web Design|code|either||P7|3|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Individual, school-related and commercial webpages.
+Computer Science: Video Game Design|code|either||P7|2|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|2D and 3D games.
+Computer Science: Programming|code|either||P7|3|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Text-based, graphical interface and drag-and-drop programs.
+Photography: Advertising|create|either||P7|4|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Fashion in color or black and white, food and product photos.
+Photography: Architecture|create|either||P7|7|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Aerial, bridges, buildings, cityscapes, industrial, interior and street art.
+Photography: Events|create|either||P7|3|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Social cause, life events and live entertainment.
+Photography: Nature|create|either||P7|12|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Aerial, animals and pets, astronomy, flowers, landscape, macro, seasons, sunrise and sunset, trees and wildlife.
+Photography: Panoramic|create|either||P7|2|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Horizontal and vertical panoramas.
+Photography: People|create|either||P7|7|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Children, culture, family, newborn, portrait, self-portrait and street.
+Photography: Photojournalism|create|either||P7|3|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|A single photo, two or more photos, and travel collage.
+Photography: Photomanipulation|create|either||P7|2|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Background manipulation or subject manipulation.
+Photography: Sports|create|either||P7|4|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Extreme, motor, indoor and outdoor sports.
+Photography: Transportation|create|either||P7|4|ute-high-school-projects/graphic-arts-multimedia-computer-science-photography|Automobile, railway, nautical and aerospace.
+Engineering Drawing: Free Hand Sketching|create|either||P7|4|ute-high-school-projects/technical-design|Mechanical, aerospace, electronic and civil subjects, pen or pencil only.
+Engineering Drawing: Working Drawings|build|either||P7|15|ute-high-school-projects/technical-design|Pencil or CADD working drawings of parts, pipe fabrication, vehicles, aerospace and civil structures, and topography.
+Engineering Drawing: Pictorial Views|build|either||P7|10|ute-high-school-projects/technical-design|Pictorial views of parts, pipe fabrication, vehicles, aerospace, electronic and civil subjects.
+Engineering Drawing: Presentation Views|build|either||P7|10|ute-high-school-projects/technical-design|Rendered presentation views of parts, pipe fabrication, vehicles, aerospace, electronic and civil subjects.
+Engineering Drawing: Exploded Views|build|either||P7|5|ute-high-school-projects/technical-design|Rendered exploded drawings with a parts list.
+Engineering Drawing: Media|build|either||P7|4|ute-high-school-projects/technical-design|3D computer images and animations of mechanical assemblies and transportation devices.
+Architecture: Free Hand Sketching|create|either||P7|4|ute-high-school-projects/technical-design|Hand sketches and perspective drawings of structures and landscapes.
+Architecture: Construction Drawings|create|either||P7|29|ute-high-school-projects/technical-design|Full drawing sets in pencil or 2D and 3D CADD: tiny homes, houses, apartments, commercial buildings, remodels, details and landscape plans.
+Architecture: Presentation Drawings|create|either||P7|6|ute-high-school-projects/technical-design|Single-sheet residential or commercial exterior and floor plan drawings.
+Architecture: Media|create|either||P7|6|ute-high-school-projects/technical-design|3D images, walkthroughs and flythroughs of structures and landscapes.
+Architecture: Interior Design|create|either||P7|6|ute-high-school-projects/technical-design|Material sample boards and illustrated perspectives, residential and commercial.
+Models: Finish Models|build|either||P7|8|ute-high-school-projects/technical-design|Realistic scale models of homes, developments, commercial, public, civil and space structures.
+Models: Structural and Study Models|build|either||P7|4|ute-high-school-projects/technical-design|Load-bearing structural models and minimal study models of homes and commercial buildings.
+Models: Kits|build|either||P7|4|ute-high-school-projects/technical-design|Kits in wood, metal, electrical or electronics, and other.
+Displays: Aerodynamics|investigate|either||P7|1|ute-high-school-projects/applied-technical-science|A display of the principles or mechanics of flight.
+Displays: Biotechnical|investigate|either||P7|2|ute-high-school-projects/applied-technical-science|A biotech health portfolio, or a display of biotech research or applications.
+Displays: Construction and Material Science|investigate|either||P7|4|ute-high-school-projects/applied-technical-science|Construction products and processes, structures, structure comparisons and materials testing.
+Displays: Electronics|investigate|either||P7|4|ute-high-school-projects/applied-technical-science|Energy storage, communication systems, electrical components and robotic applications.
+Displays: Energy and Power|investigate|either||P7|8|ute-high-school-projects/applied-technical-science|Power efficiency study, solar, generation, hydraulics and pneumatics, fuel resources, power grids and engines.
+Displays: Manufacturing|investigate|either||P7|3|ute-high-school-projects/applied-technical-science|An automation portfolio, a company organization chart, and production careers.
+Displays: Multidisciplinary|investigate|either||P7|1|ute-high-school-projects/applied-technical-science|Cross-curricular learning activities for two or more school subjects.
+Displays: Transportation|investigate|either||P7|2|ute-high-school-projects/applied-technical-science|A transportation career or a transportation method.
+Prototypes: Aerodynamics|build|either||P7|1|ute-high-school-projects/applied-technical-science|Air foil testing for cars, airplanes or rockets.
+Prototypes: Electronics|build|either||P7|6|ute-high-school-projects/applied-technical-science|Residential wiring mockup, alarm circuits, audio systems, electronic games and toys, logic circuits and devices. No kits.
+Robotics Projects|code|either||P7|7|ute-high-school-projects/applied-technical-science|Robot programming, robots with two or three or more sensors, and BEST, FIRST, FTC and VEX robot displays.`,
+teams:`TEAMS|quiz|team|4-6|Open to middle and high school teams|1|`
+};
+const LIMITS={P7:'Up to 7 per region per event',BEG:'Beginner event, up to 7 per region'};
+
+/* short summaries, paraphrased from the official event pages */
+const DESC={
+ 'nqe-animatronics':'Build an animatronic device around the annual design challenge, with sound, lights and a display that shows off its mechanical and control systems.',
+ 'nqe-architectural-design':'Develop architectural plans, a physical model, a computer model and a virtual walkthrough for the annual design challenge. Semifinalists present and are interviewed.',
+ 'nqe-artificial-intelligence':'Take a test on AI concepts to qualify for semifinals, where teams solve an onsite problem using a generative AI tool.',
+ 'nqe-audio-podcasting':'Produce an original podcast on the annual theme with strong storytelling, voice acting and sound effects, plus documentation of how it was made.',
+ 'nqe-automated-manufacturing-systems':'Engineer and prototype a sensor-based automated system that solves a production problem, then document it and write instructions for judges to run it.',
+ 'nqe-biotechnology-design':'Choose a biotechnology problem tied to the annual theme, research it, develop a solution, and present it with a display and multimedia.',
+ 'teams-teams':'Four-part engineering competition for middle and high school teams: design/build, multiple choice, mathematical modeling and an essay. The state round runs January and February; the national round is June 23\u201327, 2027 in Orlando.'
+};
+
+function sizeRange(size,mode){
+  let lo=null,hi=null; const m=size.match(/^(\d+)(?:-(\d+)|(\+))?$/);
+  if(m){lo=+m[1];hi=m[2]?+m[2]:(m[3]?null:lo)}
+  if(mode!=='team')lo=1;
+  return {lo,hi};
+}
+const EVENTS=[];
+Object.keys(RAW).forEach(level=>{
+  RAW[level].split('\n').forEach(line=>{
+    const f=line.split('|');
+    const name=f[0],type=f[1],mode=f[2],size=f[3],limit=LIMITS[f[4]]||f[4];
+    const r=sizeRange(size,mode);
+    EVENTS.push({id:level+'-'+slug(name),level,name,type,mode,size,limit,n:+f[5]||1,href:f[6]||'',incl:f[7]||'',lo:r.lo,hi:r.hi});
+  });
+});
+const BY_ID={}; EVENTS.forEach(e=>BY_ID[e.id]=e);
+const LEVEL_ORDER={nqe:0,uteo:1,utep:2,teams:3};
+const labelOf=e=>`${e.name} (${LEVELS[e.level].short})`;
+function entryText(e){
+  const s=e.size.replace('-','\u2013');
+  const sz=!s?'':s.endsWith('+')?`${s.slice(0,-1)} or more students`:`${s} student${s==='1'?'':'s'}`;
+  if(e.mode==='solo')return 'Individual';
+  if(e.mode==='either')return 'Individual or team'+(s?` (${s})`:'');
+  return sz||'Team';
+}
+
+/* ================= illustrations (line art stand-ins) ================= */
+const A=p=>`<svg class="art" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${p}</svg>`;
+const ART={
+ bulb:A('<path d="M60 14a30 30 0 0 0-15 56c3 2 5 5 5 9h20c0-4 2-7 5-9A30 30 0 0 0 60 14z" fill="var(--steel)" fill-opacity=".35"/><path d="M50 90h20M53 100h14M60 79V54M52 46l8 8 8-8M60 2v6M22 24l4 4M98 24l-4 4M6 54h6M108 54h6"/>'),
+ thinker:A('<circle cx="58" cy="52" r="20" fill="var(--steel)" fill-opacity=".35"/><path d="M22 116c2-26 17-40 36-40s34 14 36 40"/><path d="M52 50h.1M66 50h.1" stroke-width="6"/><path d="M52 62h12M44 86l10-14 8 4"/><circle cx="92" cy="26" r="11"/><circle cx="82" cy="42" r="4"/><circle cx="78" cy="50" r="2"/>'),
+ grad:A('<path d="M60 26L10 50l50 24 50-24z" fill="var(--steel)" fill-opacity=".35"/><path d="M30 62v22c0 8 14 14 30 14s30-6 30-14V62M110 50v28"/><circle cx="110" cy="82" r="4"/>'),
+ redx:A('<circle cx="60" cy="60" r="46"/><path d="M40 40l40 40M80 40L40 80" stroke="var(--red)" stroke-width="9"/>'),
+ note:A('<circle cx="44" cy="34" r="15" fill="var(--steel)" fill-opacity=".35"/><path d="M14 112c0-28 13-46 30-46s30 18 30 46"/><rect x="64" y="66" width="42" height="36" rx="5" transform="rotate(-8 85 84)"/><path d="M72 80h24M74 90h18"/>'),
+ reader:A('<circle cx="60" cy="30" r="15" fill="var(--steel)" fill-opacity=".35"/><path d="M60 46v18M14 74c16-6 32-6 46 3 14-9 30-9 46-3v26c-16-6-32-6-46 3-14-9-30-9-46-3z"/><path d="M60 77v26"/>'),
+ test:A('<rect x="20" y="12" width="64" height="90" rx="6" fill="var(--steel)" fill-opacity=".3"/><path d="M34 36l6 6 11-12M58 36h16M34 60l6 6 11-12M58 60h16M34 84h38"/><path d="M92 74l16-16 8 8-16 16-12 4z"/>'),
+ shocked:A('<circle cx="60" cy="60" r="44" fill="var(--steel)" fill-opacity=".25"/><circle cx="44" cy="52" r="5" fill="currentColor"/><circle cx="76" cy="52" r="5" fill="currentColor"/><ellipse cx="60" cy="82" rx="9" ry="12"/><path d="M32 36l12 6M88 36l-12 6"/>')
+};
+
+/* ================= state ================= */
+let QR=store.get('tsa-quiz',null);   // last quiz answers
+let settings=store.get('tsa-settings',{date:'',size:''});
+const saveSettings=()=>store.set('tsa-settings',settings);
+function daysUntil(){
+  if(!settings.date)return null;
+  const d=new Date(settings.date+'T00:00:00'); if(isNaN(d))return null;
+  const t=new Date(); t.setHours(0,0,0,0);
+  return Math.round((d-t)/864e5);
+}
+const fmtDate=s=>new Date(s+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+const defaultsF=()=>({q:'',level:'all',type:'all',format:'any',size:settings.size||'',sort:'name'});
+let F=defaultsF();
+let currentPage=null, openedFromApp=false, suppressClose=false, finderQs='';
+
+/* ================= views ================= */
+function vOverview(){
+  const cnt={nqe:0,uteo:0,utep:0,teams:0}, tc={}; let projN=0;
+  EVENTS.forEach(e=>{cnt[e.level]++;tc[e.type]=(tc[e.type]||0)+1;if(e.level==='utep')projN+=e.n});
+  const days=daysUntil();
+  const top=QR?scoreQuiz(QR)[0]:null;
+  const quiz=EVENTS.filter(e=>e.type==='quiz');
+  let cd;
+  if(days===null)cd='<p>Set your conference date to see how many days you have left to prepare.</p>';
+  else if(days>0)cd=`<p class="big">${days} <span>day${days===1?'':'s'}</span></p><p class="data">until ${esc(fmtDate(settings.date))}</p>`;
+  else if(days===0)cd='<p class="big">Today</p><p>Good luck out there.</p>';
+  else cd=`<p>${esc(fmtDate(settings.date))} has passed. Pick a new date below.</p>`;
+  const acc=[
+    ['investigate','Pick events','Take the quiz for a short list, or use the Event Finder to narrow by level, type and team size.'],
+    ['build','Commit and start building','Check entry limits and who is available, then settle on your events. Build, design and media entries take longer than test events, so start those first.'],
+    ['speak','Regional and state conferences','Confirm which events your region runs and how many entries each chapter can send. Texas TSA may change entries from the national charts, so check the Texas TSA rulebook.'],
+    ['lead','National conference','Events marked NQE (National Qualifying Events) can lead to the national conference. UTE events are Texas only, and TEAMS has its own national round, June 23\u201327, 2027 in Orlando.']
+  ];
+  return `
+  <div class="bento">
+    <section class="tile t-hero reveal" aria-labelledby="h1">
+      <div class="hero-in">
+        <div>
+          <h1 id="h1">Pick the TSA events your chapter will compete in.</h1>
+          <p class="lead">Every high school Texas TSA competition in one place: ${cnt.nqe} National Qualifying Events, ${cnt.uteo} UTE On-Site events, ${cnt.utep} UTE Project groups covering about ${projN} individual events, and TEAMS. Filter by what you like doing, or take the quiz and get matched.</p>
+          <div class="actions"><a class="btn primary" href="#/finder">Find events</a><a class="btn" href="#/quiz">Take the quiz</a></div>
+        </div>
+        <div>${ART.bulb}</div>
+      </div>
+    </section>
+
+    <section class="tile dark t-cd reveal" aria-labelledby="cdh">
+      <h2 id="cdh">Countdown</h2>
+      ${cd}
+      <div class="lrow"><label for="cdate">Conference date<span class="opt" aria-hidden="true">*</span></label><input id="cdate" type="date" data-field="date" data-fk="date" value="${esc(settings.date)}"></div>
+      <p class="data" style="font-size:.8rem;margin:10px 0 0;color:var(--steel)"><span aria-hidden="true">*</span> Optional</p>
+    </section>
+
+    <section class="tile t-count reveal" aria-labelledby="cth">
+      <h2 id="cth">What is in the list</h2>
+      <ul class="ledger-list">
+        <li><a href="#/finder?level=nqe">National Qualifying Events</a><span class="data">${cnt.nqe}</span></li>
+        <li><a href="#/finder?level=uteo">UTE On-Site events</a><span class="data">${cnt.uteo}</span></li>
+        <li><a href="#/finder?level=utep">UTE Project groups (${projN} events)</a><span class="data">${cnt.utep}</span></li>
+        <li><a href="#/finder?level=teams">TEAMS</a><span class="data">${cnt.teams}</span></li>
+      </ul>
+    </section>
+
+    <section class="tile t-types reveal" aria-labelledby="tyh">
+      <h2 id="tyh">Browse by what you like doing</h2>
+      <div class="type-grid">
+        ${TYPE_KEYS.map(k=>`<a href="#/finder?type=${k}">${ico(k)}<b>${TYPES[k].label}</b><span class="data">${tc[k]||0} events</span></a>`).join('')}
+      </div>
+    </section>
+
+    <section class="tile t-teams reveal" aria-labelledby="tmh">
+      <h2 id="tmh">TEAMS</h2>
+      <p style="margin-bottom:6px"><strong>Tests of Engineering Aptitude, Mathematics, and Science.</strong> A theme-based engineering competition for middle and high school teams. The 2027 theme is Engineering a Smarter World.</p>
+      <ul class="parts">
+        <li><span class="data">Design/Build</span><span>Design and build a solution to an engineering challenge.</span></li>
+        <li><span class="data">Multiple choice</span><span>Use math and science to solve real-world problems.</span></li>
+        <li><span class="data">Mathematical modeling</span><span>Build a model that finds a solution from the data you are given.</span></li>
+        <li><span class="data">Essay</span><span>Research and submit an in-depth essay electronically.</span></li>
+      </ul>
+      <p class="data" style="font-size:.88rem">State: January and February 2027.<br>National: June 23\u201327, 2027, Orlando.</p>
+      <div class="actions" style="margin-top:14px">
+        <a class="btn primary sm" href="#/event/teams-teams">TEAMS details</a>
+        <a class="btn sm" href="https://tsaweb.org/teams/teams" target="_blank" rel="noopener">TEAMS website</a>
+      </div>
+    </section>
+
+    <section class="tile dark t-test reveal" aria-labelledby="tdh">
+      <div class="test-in">
+        <div>
+          <h2 id="tdh">Test day</h2>
+          <p style="margin-bottom:0">Events built around a quiz or an onsite problem.</p>
+          <ul class="chips">${quiz.map(e=>`<li><a href="#/event/${e.id}">${esc(e.name)} <span class="data">${LEVELS[e.level].short}</span></a></li>`).join('')}</ul>
+        </div>
+        <div>${ART.test}</div>
+      </div>
+    </section>
+
+    <section class="tile t-prog reveal" aria-labelledby="prh">
+      <h2 id="prh">Event quiz</h2>
+      ${top?`<p>Your top match: <strong>${esc(top.e.name)}</strong> (${LEVELS[top.e.level].short}).</p>`:`<p>Not sure where to start? Four questions get you a short list.</p>`}
+      <a class="btn primary sm" href="#/quiz">${top?'Open quiz':'Take the quiz'}</a>
+    </section>
+  </div>
+
+  <section class="sec split reveal">
+    <div>
+      <h2>Season roadmap</h2>
+      <div class="accent-rule" style="background:var(--steel)"></div>
+      <p>Four steps from first look to the national conference. Open a step to see what to do in it.</p>
+    </div>
+    <div class="acc">
+      ${acc.map((a,i)=>`<div class="acc-item${i===0?' open':''}">
+        <h3><button class="acc-btn" type="button" data-act="acc" aria-expanded="${i===0}" aria-controls="acc${i}">${ico(a[0],30)}<span>${a[1]}</span><span class="pm" aria-hidden="true"></span></button></h3>
+        <div class="acc-panel" id="acc${i}" role="region" aria-label="${a[1]}"><div><p>${a[2]}</p></div></div>
+      </div>`).join('')}
+    </div>
+  </section>
+  ${noticeHTML()}`;
+}
+
+function noticeHTML(){
+  return `<p class="notice no-print">NQE entry limits come from TSA\u2019s national high school eligibility chart (2027\u201328). UTE events come from the <a href="${RULEBOOK}" target="_blank" rel="noopener">Texas TSA rulebook</a>, where each UTE Project group holds several individual event numbers such as size classes or materials. Open a group\u2019s rulebook page to pick your exact event. Event types are our own grouping to help you browse, and Texas TSA may change rules at regional and state conferences.</p>`;
+}
+
+function vFinder(){
+  return `
+  <header class="page-head reveal">
+    <h1 id="h1">Event Finder</h1>
+    <p class="lead">Narrow ${EVENTS.length} events and event groups by track, type and team size. UTE Projects are grouped, so one entry can cover many event numbers. Open one for details, or take the quiz.</p>
+  </header>
+  <div class="split finder" style="grid-template-columns:minmax(280px,4fr) minmax(0,8fr)">
+    <form class="ledger reveal" id="filters" aria-label="Filter events" onsubmit="return false">
+      <div class="lrow"><label for="fq">Search</label><input id="fq" type="search" data-field="q" placeholder="Robotics, photography, laser" value="${esc(F.q)}" autocomplete="off"></div>
+      <div class="lrow"><span class="lab" id="lvlab">Track</span>
+        <div class="seg" role="group" aria-labelledby="lvlab">
+          ${[['all','All'],['nqe','NQE'],['uteo','UTE On-Site'],['utep','UTE Projects'],['teams','TEAMS']].map(l=>`<button type="button" data-act="level" data-v="${l[0]}" aria-pressed="${F.level===l[0]}">${l[1]}</button>`).join('')}
+        </div></div>
+      <div class="lrow"><label for="ft">Type</label><select id="ft" data-field="type"><option value="all">All types</option>${TYPE_KEYS.map(k=>`<option value="${k}"${F.type===k?' selected':''}>${TYPES[k].label}</option>`).join('')}</select></div>
+      <div class="lrow"><label for="ff">Format</label><select id="ff" data-field="format">
+        <option value="any"${F.format==='any'?' selected':''}>Any format</option>
+        <option value="team"${F.format==='team'?' selected':''}>Teams allowed</option>
+        <option value="solo"${F.format==='solo'?' selected':''}>Individuals allowed</option></select></div>
+      <div class="lrow"><label for="fn">Students<span class="opt" aria-hidden="true">*</span><span class="sr"> (optional)</span></label><input id="fn" type="number" min="1" max="12" inputmode="numeric" data-field="size" placeholder="How many can compete" value="${esc(F.size)}"></div>
+      <div class="lrow"><label for="fs">Sort by</label><select id="fs" data-field="sort">
+        <option value="name"${F.sort==='name'?' selected':''}>Name</option>
+        <option value="type"${F.sort==='type'?' selected':''}>Type</option>
+        <option value="level"${F.sort==='level'?' selected':''}>Track</option></select></div>
+      <div class="ledger-foot"><button type="button" class="btn sm" data-act="reset">Reset filters</button><span class="data muted"><span class="opt" aria-hidden="true">*</span> Optional</span></div>
+    </form>
+    <section aria-label="Results">
+      <p class="count data" id="count" aria-live="polite"></p>
+      <ol class="results" id="results"></ol>
+    </section>
+  </div>
+  ${noticeHTML()}`;
+}
+
+function filtered(){
+  const q=F.q.trim().toLowerCase(), n=parseInt(F.size,10);
+  const list=EVENTS.filter(e=>{
+    if(F.level!=='all'&&e.level!==F.level)return false;
+    if(F.type!=='all'&&e.type!==F.type)return false;
+    if(F.format==='team'&&e.mode==='solo')return false;
+    if(F.format==='solo'&&e.mode==='team')return false;
+    if(n&&e.lo&&e.lo>n)return false;
+    if(q&&!(e.name.toLowerCase().includes(q)||TYPES[e.type].label.toLowerCase().includes(q)||LEVELS[e.level].label.toLowerCase().includes(q)||(e.incl||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(F.sort==='type')return TYPE_KEYS.indexOf(a.type)-TYPE_KEYS.indexOf(b.type)||a.name.localeCompare(b.name);
+    if(F.sort==='level')return LEVEL_ORDER[a.level]-LEVEL_ORDER[b.level]||a.name.localeCompare(b.name);
+    return a.name.localeCompare(b.name)||LEVEL_ORDER[a.level]-LEVEL_ORDER[b.level];
+  });
+  return list;
+}
+function rowHTML(e,i,reveal){
+  const btn=`<button class="btn sm" data-act="open" data-id="${e.id}" data-fk="row-${e.id}" aria-label="Details for ${esc(labelOf(e))}">Details</button>`;
+  return `<li class="ev${reveal&&i<10?' reveal':''}">
+    ${ico(e.type,30)}
+    <div><h3><button class="linkbtn" data-act="open" data-id="${e.id}">${esc(e.name)}</button></h3>
+      <div class="meta"><span>${LEVELS[e.level].label}</span><span>${TYPES[e.type].label}</span></div></div>
+    <div class="size">${esc(entryText(e))}<span>${esc(e.limit)}</span>${e.n>1?`<span>${e.n} events in this group</span>`:''}</div>
+    <div>${btn}</div></li>`;
+}
+function renderResults(first){
+  const res=$('#results'); if(!res)return;
+  const list=filtered();
+  $('#count').textContent=`Showing ${list.length} of ${EVENTS.length} events`;
+  res.innerHTML=list.length?list.map((e,i)=>rowHTML(e,i,first)).join(''):
+    `<li class="empty">${ART.shocked}<h3>No events match</h3><p>Loosen a filter or reset them all to see every event.</p><button class="btn primary" data-act="reset">Reset filters</button></li>`;
+}
+
+const TYPE_PHRASES={
+  build:'Building something that moves, flies or works',
+  create:'Making something creative: video, design, music or writing',
+  speak:'Talking: speeches, debates and presentations',
+  quiz:'Racing a test or a puzzle against the clock',
+  code:'Coding, games and cybersecurity',
+  lead:'Leading meetings and teaching others',
+  investigate:'Investigating science, health or data'
+};
+const QUIZ=[
+  {id:'types',q:'What sounds like the most fun?',hint:'Pick up to two.',type:'multi',max:2,opts:TYPE_KEYS.map(k=>[k,TYPE_PHRASES[k]])},
+  {id:'work',q:'How do you like to work?',type:'single',opts:[['solo','On my own'],['team','With a team'],['either','Either is fine']]},
+  {id:'students',q:'How many students can compete?',type:'single',opts:[['1','Just me'],['2','Two'],['3','Three'],['6','Four or more']]},
+  {id:'prep',q:'What kind of prep do you want?',type:'single',opts:[['project','Weeks of hands-on project work'],['quick','Quick study and practice sessions']]}
+];
+let Q={mode:'intro',step:0,a:{types:[]}};
+const optLabel=(qid,v)=>{const q=QUIZ.find(x=>x.id===qid);const o=q.opts.find(x=>x[0]===v);return o?o[1]:''};
+
+function scoreQuiz(a){
+  const n=parseInt(a.students,10)||1, out=[];
+  EVENTS.forEach(e=>{
+    if(e.mode==='team'&&e.lo&&e.lo>n)return;
+    let sc=0; const why=[];
+    if((a.types||[]).includes(e.type)){sc+=6;why.push('matches your interest in '+TYPES[e.type].label.toLowerCase())}
+    const proj=['build','create','code','investigate'].includes(e.type);
+    if(a.prep==='project'&&proj){sc+=1;why.push('leans toward project work')}
+    if(a.prep==='quick'&&!proj){sc+=1;why.push('leans toward study and practice')}
+    if(a.work==='solo'){
+      if(e.mode==='solo'){sc+=2;why.push('individual event')}else if(e.mode==='either'){sc+=2;why.push('individuals can enter')}else sc-=3;
+    }else if(a.work==='team'){
+      if(e.mode==='team'){sc+=2;why.push('team event')}else if(e.mode==='either'){sc+=2;why.push('teams can enter')}else sc-=3;
+    }
+    if(n===1&&e.mode==='team')sc-=2;
+    if(!why.length)why.push('open to high school students');
+    const txt=why.join(', ');
+    out.push({e,score:sc,why:txt.charAt(0).toUpperCase()+txt.slice(1),tier:sc>=7?'Strong match':sc>=4?'Good match':'Worth a look'});
+  });
+  out.sort((x,y)=>y.score-x.score||LEVEL_ORDER[x.e.level]-LEVEL_ORDER[y.e.level]||x.e.name.localeCompare(y.e.name));
+  /* keep the list varied: cap each track, then fill up to 10 */
+  const caps={nqe:5,uteo:3,utep:4,teams:1}, used={nqe:0,uteo:0,utep:0,teams:0}, pick=[];
+  for(const r of out){if(pick.length===10)break;if(used[r.e.level]>=caps[r.e.level])continue;used[r.e.level]++;pick.push(r)}
+  for(const r of out){if(pick.length>=10)break;if(!pick.includes(r))pick.push(r)}
+  pick.sort((x,y)=>y.score-x.score||LEVEL_ORDER[x.e.level]-LEVEL_ORDER[y.e.level]||x.e.name.localeCompare(y.e.name));
+  return pick;
+}
+
+function vQuiz(){
+  return `<header class="page-head reveal"><h1 id="h1">Event Quiz</h1>
+    <p class="lead">Not sure what to enter? Answer four quick questions and get a short list of events that fit.</p></header>
+    <section id="quizBox" class="reveal">${quizHTML()}</section>${noticeHTML()}`;
+}
+function quizHTML(){
+  if(Q.mode==='result')return resultHTML();
+  if(Q.mode==='ask')return askHTML();
+  return `<div class="q-intro"><div class="tile">
+      <h2 class="q-focus">Four questions, a short list of events.</h2>
+      <p>Tell us what you enjoy, how you like to work, and how many students can compete. You get up to ten events ranked by fit.</p>
+      <p class="data muted" style="font-size:.85rem">A rough guide built from event types and team sizes. Always check the rulebook before you commit.</p>
+      <div class="actions"><button class="btn primary" data-act="qstart" data-fk="qs">Start the quiz</button>${QR?'<button class="btn" data-act="qresult">See my last matches</button>':''}</div>
+    </div><div>${ART.reader}</div></div>`;
+}
+function answered(){const q=QUIZ[Q.step],v=Q.a[q.id];return q.type==='multi'?!!(v&&v.length):!!v}
+function askHTML(){
+  const q=QUIZ[Q.step], sel=Q.a[q.id], multi=q.type==='multi';
+  return `<div class="tile quiz-card">
+    <p class="data muted" style="margin:0 0 8px">Question ${Q.step+1} of ${QUIZ.length}</p>
+    <div class="bar" role="progressbar" aria-valuemin="1" aria-valuemax="${QUIZ.length}" aria-valuenow="${Q.step+1}" aria-label="Quiz progress"><i style="width:${(Q.step+1)/QUIZ.length*100}%"></i></div>
+    <h2 id="qh" class="q-focus">${q.q}</h2>
+    ${q.hint?`<p class="muted" style="margin:0">${q.hint}</p>`:''}
+    <div class="opts" role="group" aria-labelledby="qh"${multi?' data-multi':''}>
+      ${q.opts.map(o=>{const on=multi?(sel||[]).includes(o[0]):sel===o[0];
+        return `<button type="button" class="opt" data-act="qopt" data-v="${o[0]}" aria-pressed="${on}" data-fk="q-${o[0]}"><span class="mark" aria-hidden="true"></span><span class="otext">${multi?ico(o[0],26):''}<span>${o[1]}</span></span></button>`}).join('')}
+    </div>
+    <div class="actions"><button class="btn" data-act="qback">Back</button>
+      <button class="btn primary" data-act="qnext"${answered()?'':' disabled'}>${Q.step===QUIZ.length-1?'See my matches':'Next question'}</button></div>
+  </div>`;
+}
+function resultHTML(){
+  const a=Q.a&&Q.a.work?Q.a:QR, res=scoreQuiz(a);
+  const qs=new URLSearchParams(); if((a.types||[])[0])qs.set('type',a.types[0]);
+  const types=(a.types||[]).map(k=>TYPES[k].label).join(' and ');
+  return `<div class="q-result"><h2 id="qh" class="q-focus">Your top matches</h2>
+    <p>Ranked by how well each event fits your answers.</p>
+    <dl class="summary">
+      <div><dt>Interests</dt><dd>${esc(types)}</dd></div>
+      <div><dt>Work style</dt><dd>${optLabel('work',a.work)}</dd></div>
+      <div><dt>Students</dt><dd>${optLabel('students',a.students)}</dd></div>
+      <div><dt>Prep</dt><dd>${optLabel('prep',a.prep)}</dd></div>
+    </dl>
+    ${res.length?`<ol class="results">${res.map(r=>`<li class="ev">${ico(r.e.type,30)}
+      <div><h3><button class="linkbtn" data-act="open" data-id="${r.e.id}">${esc(r.e.name)}</button></h3>
+        <div class="meta"><span>${LEVELS[r.e.level].label}</span><span>${TYPES[r.e.type].label}</span></div></div>
+      <div class="size"><span class="tier">${r.tier}</span><span>${esc(r.why)}</span></div>
+      <div><button class="btn sm" data-act="open" data-id="${r.e.id}" aria-label="Details for ${esc(labelOf(r.e))}">Details</button></div></li>`).join('')}</ol>`
+    :`<div class="empty">${ART.shocked}<h3>No matches</h3><p>Try different answers.</p></div>`}
+    <div class="actions no-print"><button class="btn primary" data-act="qstart" data-fk="qs">Retake the quiz</button>
+      <a class="btn" href="#/finder?${qs.toString()}">Browse in the Event Finder</a>
+      <button class="btn" data-act="print">Print matches</button></div></div>`;
+}
+function renderQuiz(focusHead){
+  const box=$('#quizBox'); if(!box)return;
+  const ae=document.activeElement, fk=ae&&ae.dataset&&ae.dataset.fk;
+  box.innerHTML=quizHTML();
+  if(focusHead){
+    const h=$('.q-focus',box);
+    if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true})}
+    box.scrollIntoView({block:'start'});
+  }else if(fk){const el=document.querySelector('[data-fk="'+fk+'"]');if(el)el.focus({preventScroll:true})}
+}
+function pickOption(v){
+  const q=QUIZ[Q.step];
+  if(q.type==='multi'){
+    const arr=(Q.a[q.id]||[]).slice(), i=arr.indexOf(v);
+    if(i>-1)arr.splice(i,1);else{arr.push(v);if(arr.length>q.max)arr.shift()}
+    Q.a[q.id]=arr;
+  }else Q.a[q.id]=v;
+  renderQuiz(false);
+}
+function qNext(){
+  if(!answered())return;
+  if(Q.step<QUIZ.length-1){Q.step++;renderQuiz(true)}
+  else{QR=Object.assign({},Q.a);store.set('tsa-quiz',QR);Q.mode='result';renderQuiz(true);toast('Your matches are ready')}
+}
+function qBack(){
+  if(Q.step>0){Q.step--;renderQuiz(true)}else{Q.mode='intro';renderQuiz(true)}
+}
+
+function dialogHTML(e){
+  const lv=LEVELS[e.level];
+  const desc=DESC[e.id]||e.incl||`${TYPES[e.type].blurb} The rules, judging and this year\u2019s problem are in the official event guide below.`;
+  const first=e.href?`<a href="${RULEBOOK}${e.href}" target="_blank" rel="noopener">Rulebook page for this event</a>`:`<a href="${lv.link}" target="_blank" rel="noopener">${lv.linkText}</a>`;
+  return `<div class="dlg-top"><div><span class="muted">${ico(e.type,34)}</span><h2 id="dlgTitle">${esc(e.name)}</h2><p class="data muted" style="margin:0">${lv.label}</p></div>
+    <button class="x" data-act="close" aria-label="Close details">&times;</button></div>
+    <dl>
+      <div><dt>Type</dt><dd>${TYPES[e.type].label}. ${TYPES[e.type].blurb}</dd></div>
+      <div><dt>Who competes</dt><dd>${esc(entryText(e))}</dd></div>
+      <div><dt>Entry limit</dt><dd>${esc(e.limit)}</dd></div>
+      ${e.n>1?`<div><dt>In this group</dt><dd>${e.n} individual events</dd></div>`:''}
+    </dl>
+    <p>${esc(desc)}</p>
+    ${e.level==='utep'?`<p class="muted" style="font-size:.95rem">Projects can be done alone or as a team and need the required documentation. Open the rulebook page for exact event numbers, size limits and how to submit.</p>`:''}
+    <p class="data muted" style="font-size:.85rem;margin:0">${first}, <a href="${RULEBOOK}" target="_blank" rel="noopener">Texas TSA rulebook</a></p>`;
+}
+
+const VIEWS={overview:vOverview,finder:vFinder,quiz:vQuiz};
+const TITLES={overview:'Overview',finder:'Event Finder',quiz:'Event Quiz'};
+
+/* ================= rendering / routing ================= */
+const view=$('#view'), dlg=$('#dlg'), dlgBody=$('#dlgBody');
+let io=null;
+function mountReveals(instant){
+  const els=$$('.reveal',view);
+  if(io){io.disconnect();io=null}
+  if(instant||reduce()||!('IntersectionObserver' in window)){els.forEach(x=>x.classList.add('in'));return}
+  io=new IntersectionObserver(list=>list.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target)}}),{rootMargin:'0px 0px -6% 0px',threshold:.06});
+  els.forEach((x,i)=>{x.style.transitionDelay=(i%6)*70+'ms';io.observe(x)});
+}
+function updateRail(){
+  $$('.nav a').forEach(a=>{if(a.dataset.page===currentPage)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+}
+function drawPage(page,done,firstLoad){
+  view.innerHTML=VIEWS[page]();
+  if(page==='finder')renderResults(true);
+  view.classList.remove('leaving');
+  mountReveals();
+  document.title=TITLES[page]+' \u2013 TSA Event Picker';
+  updateRail();
+  if(!firstLoad){window.scrollTo(0,0);const h=$('#h1',view);if(h){h.setAttribute('tabindex','-1');h.focus({preventScroll:true})}}
+  if(done)done();
+}
+function showPage(page,done){
+  const first=currentPage===null;
+  currentPage=page;
+  if(page==='finder')F=paramsToF(routeParams);
+  if(page==='quiz')Q={mode:'intro',step:0,a:{types:[]}};
+  if(first||reduce()){drawPage(page,done,first);return}
+  view.classList.add('leaving');
+  setTimeout(()=>drawPage(page,done,false),200);
+}
+let routeParams=new URLSearchParams();
+function paramsToF(p){
+  const f=defaultsF();
+  if(['nqe','uteo','utep','teams'].includes(p.get('level')))f.level=p.get('level');
+  if(TYPES[p.get('type')])f.type=p.get('type');
+  if(['team','solo'].includes(p.get('format')))f.format=p.get('format');
+  if(['type','level'].includes(p.get('sort')))f.sort=p.get('sort');
+  if(p.get('q'))f.q=p.get('q');
+  if(p.get('n')&&/^\d+$/.test(p.get('n')))f.size=p.get('n');
+  return f;
+}
+function fToQs(){
+  const p=new URLSearchParams();
+  if(F.q)p.set('q',F.q); if(F.level!=='all')p.set('level',F.level); if(F.type!=='all')p.set('type',F.type);
+  if(F.format!=='any')p.set('format',F.format); if(F.sort!=='name')p.set('sort',F.sort); if(F.size)p.set('n',F.size);
+  return p.toString();
+}
+function syncFinder(){
+  renderResults(false);
+  $$('[data-act="level"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===F.level)));
+  finderQs=fToQs();
+  try{history.replaceState(null,'','#/finder'+(finderQs?'?'+finderQs:''))}catch(e){}
+}
+function route(){
+  const raw=location.hash.replace(/^#\/?/,'');
+  const [pathRaw,qs]=raw.split('?'); const parts=pathRaw.split('/');
+  let page=parts[0]||'overview', evId=null;
+  if(page==='event'){evId=parts[1];page=currentPage||'finder'}
+  if(!VIEWS[page]){page='overview'}
+  routeParams=new URLSearchParams(qs||'');
+  if(!location.hash)try{history.replaceState(null,'','#/overview')}catch(e){}
+  const after=()=>syncModal(evId);
+  if(page!==currentPage){showPage(page,after)}else{after()}
+}
+function syncModal(id){
+  const e=id&&BY_ID[id];
+  if(e){dlgBody.innerHTML=dialogHTML(e);dlg.dataset.id=id;if(!dlg.open)dlg.showModal();updateRail()}
+  else if(dlg.open){suppressClose=true;dlg.close()}
+}
+dlg.addEventListener('close',()=>{
+  if(suppressClose){suppressClose=false;return}
+  if(location.hash.indexOf('#/event/')===0){
+    if(openedFromApp){openedFromApp=false;history.back()}
+    else location.hash='#/finder'+(finderQs?'?'+finderQs:'');
+  }
+});
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+window.addEventListener('hashchange',route);
+
+/* ================= actions ================= */
+function refresh(){
+  const ae=document.activeElement, fk=ae&&ae.dataset&&ae.dataset.fk, y=window.scrollY;
+  if(currentPage==='finder')renderResults(false);
+  else{view.innerHTML=VIEWS[currentPage]();mountReveals(true);window.scrollTo(0,y)}
+  updateRail();
+  if(dlg.open&&BY_ID[dlg.dataset.id])dlgBody.innerHTML=dialogHTML(BY_ID[dlg.dataset.id]);
+  if(fk){const el=document.querySelector('[data-fk="'+fk+'"]');if(el)el.focus({preventScroll:true})}
+}
+const toastBox=$('#toasts');
+function toast(msg,act){
+  const t=document.createElement('div'); t.className='toast';
+  const s=document.createElement('span'); s.textContent=msg; t.append(s);
+  if(act){const b=document.createElement('button');b.type='button';b.textContent=act.label;b.onclick=()=>{act.fn();t.remove()};t.append(b)}
+  toastBox.append(t);
+  try{if(toastBox.hidePopover)toastBox.hidePopover();if(toastBox.showPopover)toastBox.showPopover()}catch(e){}
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},4200);
+}
+document.addEventListener('click',ev=>{
+  const ea=ev.target.closest('a[href^="#/event/"]'); if(ea)openedFromApp=true;
+  const t=ev.target.closest('[data-act]'); if(!t)return;
+  const act=t.dataset.act;
+  switch(act){
+    case 'open': openedFromApp=true; location.hash='#/event/'+t.dataset.id; break;
+    case 'close': dlg.close(); break;
+    case 'level': F.level=t.dataset.v; syncFinder(); break;
+    case 'reset':
+      settings.size=''; saveSettings(); F=defaultsF(); finderQs='';
+      try{history.replaceState(null,'','#/finder')}catch(e){}
+      view.innerHTML=vFinder(); renderResults(false); mountReveals(true); break;
+    case 'acc': {
+      const item=t.closest('.acc-item'), open=!item.classList.contains('open');
+      item.classList.toggle('open',open); t.setAttribute('aria-expanded',String(open)); break;
+    }
+    case 'print': window.print(); break;
+    case 'qstart': Q={mode:'ask',step:0,a:{types:[]}}; renderQuiz(true); break;
+    case 'qresult': Q={mode:'result',step:0,a:QR}; renderQuiz(true); break;
+    case 'qopt': pickOption(t.dataset.v); break;
+    case 'qnext': qNext(); break;
+    case 'qback': qBack(); break;
+  }
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target, f=t.dataset&&t.dataset.field; if(!f)return;
+  if(f==='q'){F.q=t.value;syncFinder()}
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target, f=t.dataset&&t.dataset.field; if(!f)return;
+  if(f==='type'){F.type=t.value;syncFinder()}
+  else if(f==='format'){F.format=t.value;syncFinder()}
+  else if(f==='sort'){F.sort=t.value;syncFinder()}
+  else if(f==='size'){F.size=t.value.replace(/\D/g,'');settings.size=F.size;saveSettings();syncFinder()}
+  else if(f==='date'){settings.date=t.value;saveSettings();refresh()}
+});
+
+route();
+})();
+</script>
+</body>
+</html>
